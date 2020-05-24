@@ -27,7 +27,7 @@
 #include <unistd.h>
 #endif
 
-#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
+#ifdef __unix__
 #include <errno.h>
 #endif
 
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 		const char *reldir;
 		int left;
 		boolean fileabs;
-#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
+#ifdef __unix__
 		const char *link;
 #endif
 
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 				M_PathParts(logdir) - 1,
 				M_PathParts(logfilename) - 1, 0755);
 
-#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
+#ifdef __unix__
 		logstream = fopen(logfilename, "w");
 #ifdef DEFAULTDIR
 		if (logdir)
@@ -214,9 +214,9 @@ int main(int argc, char **argv)
 		{
 			I_OutputMsg("Error symlinking latest-log.txt: %s\n", strerror(errno));
 		}
-#else/*defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)*/
+#else/*__unix__*/
 		logstream = fopen("latest-log.txt", "wt+");
-#endif/*defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)*/
+#endif/*__unix__*/
 	}
 
 	//I_OutputMsg("I_StartupSystem() ...\n");

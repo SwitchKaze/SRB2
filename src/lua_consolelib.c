@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 2012-2016 by John "JTE" Muniz.
-// Copyright (C) 2012-2020 by Sonic Team Junior.
+// Copyright (C) 2012-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -11,6 +11,7 @@
 /// \brief console modifying/etc library for Lua scripting
 
 #include "doomdef.h"
+#ifdef HAVE_BLUA
 #include "fastcmp.h"
 #include "p_local.h"
 #include "g_game.h"
@@ -86,7 +87,7 @@ deny:
 
 	CONS_Alert(CONS_WARNING, M_GetText("Illegal lua command received from %s\n"), player_names[playernum]);
 	if (server)
-		SendKick(playernum, KICK_MSG_CON_FAIL | KICK_MSG_KEEP_BODY);
+		SendKick(playernum, KICK_MSG_CON_FAIL);
 }
 
 // Wrapper for COM_AddCommand commands
@@ -111,12 +112,12 @@ void COM_Lua_f(void)
 
 	lua_rawgeti(gL, -1, 2); // push flags from command info table
 	if (lua_isboolean(gL, -1))
-		flags = (lua_toboolean(gL, -1) ? COM_ADMIN : 0);
+		flags = (lua_toboolean(gL, -1) ? 1 : 0);
 	else
 		flags = (UINT8)lua_tointeger(gL, -1);
 	lua_pop(gL, 1); // pop flags
 
-	if (flags & COM_SPLITSCREEN) // flag 2: splitscreen player command.
+	if (flags & 2) // flag 2: splitscreen player command.
 	{
 		if (!splitscreen)
 		{
@@ -126,12 +127,12 @@ void COM_Lua_f(void)
 		playernum = secondarydisplayplayer;
 	}
 
-	if (netgame && !( flags & COM_LOCAL ))/* don't send local commands */
+	if (netgame)
 	{ // Send the command through the network
 		UINT8 argc;
 		lua_pop(gL, 1); // pop command info table
 
-		if (flags & COM_ADMIN && !server && !IsPlayerAdmin(playernum)) // flag 1: only server/admin can use this command.
+		if (flags & 1 && !server && !IsPlayerAdmin(playernum)) // flag 1: only server/admin can use this command.
 		{
 			CONS_Printf(M_GetText("Only the server or a remote admin can use this.\n"));
 			return;
@@ -151,7 +152,7 @@ void COM_Lua_f(void)
 		WRITEUINT8(p, argc);
 		for (i = 0; i < argc; i++)
 			WRITESTRINGN(p, COM_Argv(i), 255);
-		if (flags & COM_SPLITSCREEN)
+		if (flags & 2)
 			SendNetXCmd2(XD_LUACMD, buf, p-buf);
 		else
 			SendNetXCmd(XD_LUACMD, buf, p-buf);
@@ -185,15 +186,7 @@ static int lib_comAddCommand(lua_State *L)
 	if (lua_gettop(L) >= 3)
 	{ // For the third argument, only take a boolean or a number.
 		lua_settop(L, 3);
-		if (lua_type(L, 3) == LUA_TBOOLEAN)
-		{
-			CONS_Alert(CONS_WARNING,
-					"Using a boolean for admin commands is "
-					"deprecated and will be removed.\n"
-					"Use \"COM_ADMIN\" instead.\n"
-			);
-		}
-		else
+		if (lua_type(L, 3) != LUA_TBOOLEAN)
 			luaL_checktype(L, 3, LUA_TNUMBER);
 	}
 	else
@@ -428,12 +421,6 @@ static int lib_cvRegisterVar(lua_State *L)
 	return 1;
 }
 
-static int lib_cvFindVar(lua_State *L)
-{
-	LUA_PushLightUserdata(L, CV_FindVar(luaL_checkstring(L,1)), META_CVAR);
-	return 1;
-}
-
 // CONS_Printf for a single player
 // Use 'print' in baselib for a global message.
 static int lib_consPrintf(lua_State *L)
@@ -473,7 +460,6 @@ static luaL_Reg lib[] = {
 	{"COM_BufAddText", lib_comBufAddText},
 	{"COM_BufInsertText", lib_comBufInsertText},
 	{"CV_RegisterVar", lib_cvRegisterVar},
-	{"CV_FindVar", lib_cvFindVar},
 	{"CONS_Printf", lib_consPrintf},
 	{NULL, NULL}
 };
@@ -536,3 +522,5 @@ int LUA_ConsoleLib(lua_State *L)
 	luaL_register(L, NULL, lib);
 	return 0;
 }
+
+#endif

@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2020 by Sonic Team Junior.
+// Copyright (C) 1999-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -32,14 +32,10 @@ typedef enum
 	render_none = 3  // for dedicated server
 } rendermode_t;
 
-/**	\brief current render mode
+/**	\brief currect render mode
 */
 extern rendermode_t rendermode;
 
-/**	\brief OpenGL state
-	0 = never loaded, 1 = loaded successfully, -1 = failed loading
-*/
-extern INT32 vid_opengl_state;
 
 /**	\brief use highcolor modes if true
 */
@@ -48,8 +44,9 @@ extern boolean highcolor;
 /**	\brief setup video mode
 */
 void I_StartupGraphics(void);
+void I_StartupHardwareGraphics(void);
 
-/**	\brief shutdown video mode
+/**	\brief restore old video mode
 */
 void I_ShutdownGraphics(void);
 
@@ -85,21 +82,10 @@ INT32 VID_GetModeForSize(INT32 w, INT32 h);
 
 	\param	modenum	video mode to set to
 
-	\return	current video mode
+	\return	currect video mode
 */
 INT32 VID_SetMode(INT32 modenum);
-
-/**	\brief Checks the render state
-*/
 void VID_CheckRenderer(void);
-
-/**	\brief Load OpenGL mode
-*/
-void VID_StartupOpenGL(void);
-
-/**	\brief Checks if OpenGL loaded
-*/
-void VID_CheckGLLoaded(rendermode_t oldrender);
 
 /**	\brief	The VID_GetModeName function
 

@@ -54,8 +54,6 @@
 
 #include "../screen.h"
 
-#include "../m_menu.h"
-
 // Wheel support for Win95/WinNT3.51
 #include <zmouse.h>
 
@@ -652,7 +650,6 @@ void I_Error(const char *error, ...)
 		G_StopMetalRecording(false);
 
 	D_QuitNetGame();
-	M_FreePlayerSetupColors();
 
 	// shutdown everything that was started
 	I_ShutdownSystem();
@@ -748,8 +745,6 @@ void I_Quit(void)
 	// or something else that will be finished by I_ShutdownSystem(),
 	// so do it before.
 	D_QuitNetGame();
-
-	M_FreePlayerSetupColors();
 
 	// shutdown everything that was started
 	I_ShutdownSystem();
@@ -3204,7 +3199,7 @@ INT32 I_GetKey(void)
 // -----------------
 #define DI_KEYBOARD_BUFFERSIZE 32 // number of data elements in keyboard buffer
 
-static void I_StartupKeyboard(void)
+void I_StartupKeyboard(void)
 {
 	DIPROPDWORD dip;
 
@@ -3439,8 +3434,6 @@ INT32 I_StartupSystem(void)
 
 	// some 'more global than globals' things to initialize here ?
 	graphics_started = keyboard_started = sound_started = cdaudio_started = false;
-
-	I_StartupKeyboard();
 
 #ifdef NDEBUG
 

@@ -449,12 +449,8 @@ static poly_t *CutOutSubsecPoly(seg_t *lseg, INT32 count, poly_t *poly)
 	// for each seg of the subsector
 	for (; count--; lseg++)
 	{
-		line_t *line = lseg->linedef;
-
-		if (lseg->glseg)
-			continue;
-
 		//x,y,dx,dy (like a divline)
+		line_t *line = lseg->linedef;
 		p1.x = FIXED_TO_FLOAT(lseg->side ? line->v2->x : line->v1->x);
 		p1.y = FIXED_TO_FLOAT(lseg->side ? line->v2->y : line->v1->y);
 		p2.x = FIXED_TO_FLOAT(lseg->side ? line->v1->x : line->v2->x);
@@ -887,10 +883,12 @@ static void AdjustSegs(void)
 			float distv1,distv2,tmp;
 			nearv1 = nearv2 = MYMAX;
 
+#ifdef POLYOBJECTS
 			// Don't touch polyobject segs. We'll compensate
 			// for this when we go about drawing them.
 			if (lseg->polyseg)
 				continue;
+#endif
 
 			if (p) {
 				for (j = 0; j < p->numpts; j++)

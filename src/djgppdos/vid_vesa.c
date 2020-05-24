@@ -378,8 +378,10 @@ INT32 VID_SetMode (INT32 modenum)  //, UINT8 *palette)
 	return 1;
 }
 
-void VID_CheckRenderer(void) {}
-void VID_CheckGLLoaded(rendermode_t oldrender) {}
+void VID_CheckRenderer(void)
+{
+	// ..............
+}
 
 
 

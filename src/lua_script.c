@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 2012-2016 by John "JTE" Muniz.
-// Copyright (C) 2012-2020 by Sonic Team Junior.
+// Copyright (C) 2012-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -11,19 +11,20 @@
 /// \brief Lua scripting basics
 
 #include "doomdef.h"
+#ifdef HAVE_BLUA
 #include "fastcmp.h"
 #include "dehacked.h"
 #include "z_zone.h"
 #include "w_wad.h"
 #include "p_setup.h"
 #include "r_state.h"
-#include "r_sky.h"
 #include "g_game.h"
-#include "f_finale.h"
 #include "byteptr.h"
 #include "p_saveg.h"
 #include "p_local.h"
+#ifdef ESLOPE
 #include "p_slopes.h" // for P_SlopeById
+#endif
 #ifdef LUA_ALLOW_BYTECODE
 #include "d_netfil.h" // for LUA_DumpFile
 #endif
@@ -78,234 +79,8 @@ FUNCNORETURN static int LUA_Panic(lua_State *L)
 #endif
 }
 
-// Moved here from lib_getenum.
-int LUA_PushGlobals(lua_State *L, const char *word)
-{
-	if (fastcmp(word,"gamemap")) {
-		lua_pushinteger(L, gamemap);
-		return 1;
-	} else if (fastcmp(word,"maptol")) {
-		lua_pushinteger(L, maptol);
-		return 1;
-	} else if (fastcmp(word,"ultimatemode")) {
-		lua_pushboolean(L, ultimatemode != 0);
-		return 1;
-	} else if (fastcmp(word,"mariomode")) {
-		lua_pushboolean(L, mariomode != 0);
-		return 1;
-	} else if (fastcmp(word,"twodlevel")) {
-		lua_pushboolean(L, twodlevel != 0);
-		return 1;
-	} else if (fastcmp(word,"circuitmap")) {
-		lua_pushboolean(L, circuitmap);
-		return 1;
-	} else if (fastcmp(word,"stoppedclock")) {
-		lua_pushboolean(L, stoppedclock);
-		return 1;
-	} else if (fastcmp(word,"netgame")) {
-		lua_pushboolean(L, netgame);
-		return 1;
-	} else if (fastcmp(word,"multiplayer")) {
-		lua_pushboolean(L, multiplayer);
-		return 1;
-	} else if (fastcmp(word,"modeattacking")) {
-		lua_pushboolean(L, modeattacking);
-		return 1;
-	} else if (fastcmp(word,"splitscreen")) {
-		lua_pushboolean(L, splitscreen);
-		return 1;
-	} else if (fastcmp(word,"gamecomplete")) {
-		lua_pushboolean(L, gamecomplete);
-		return 1;
-	} else if (fastcmp(word,"devparm")) {
-		lua_pushboolean(L, devparm);
-		return 1;
-	} else if (fastcmp(word,"modifiedgame")) {
-		lua_pushboolean(L, modifiedgame && !savemoddata);
-		return 1;
-	} else if (fastcmp(word,"menuactive")) {
-		lua_pushboolean(L, menuactive);
-		return 1;
-	} else if (fastcmp(word,"paused")) {
-		lua_pushboolean(L, paused);
-		return 1;
-	} else if (fastcmp(word,"bluescore")) {
-		lua_pushinteger(L, bluescore);
-		return 1;
-	} else if (fastcmp(word,"redscore")) {
-		lua_pushinteger(L, redscore);
-		return 1;
-	} else if (fastcmp(word,"timelimit")) {
-		lua_pushinteger(L, cv_timelimit.value);
-		return 1;
-	} else if (fastcmp(word,"pointlimit")) {
-		lua_pushinteger(L, cv_pointlimit.value);
-		return 1;
-	// begin map vars
-	} else if (fastcmp(word,"spstage_start")) {
-		lua_pushinteger(L, spstage_start);
-		return 1;
-	} else if (fastcmp(word,"sstage_start")) {
-		lua_pushinteger(L, sstage_start);
-		return 1;
-	} else if (fastcmp(word,"sstage_end")) {
-		lua_pushinteger(L, sstage_end);
-		return 1;
-	} else if (fastcmp(word,"smpstage_start")) {
-		lua_pushinteger(L, smpstage_start);
-		return 1;
-	} else if (fastcmp(word,"smpstage_end")) {
-		lua_pushinteger(L, smpstage_end);
-		return 1;
-	} else if (fastcmp(word,"titlemap")) {
-		lua_pushinteger(L, titlemap);
-		return 1;
-	} else if (fastcmp(word,"titlemapinaction")) {
-		lua_pushboolean(L, (titlemapinaction != TITLEMAP_OFF));
-		return 1;
-	} else if (fastcmp(word,"bootmap")) {
-		lua_pushinteger(L, bootmap);
-		return 1;
-	} else if (fastcmp(word,"tutorialmap")) {
-		lua_pushinteger(L, tutorialmap);
-		return 1;
-	} else if (fastcmp(word,"tutorialmode")) {
-		lua_pushboolean(L, tutorialmode);
-		return 1;
-	// end map vars
-	// begin CTF colors
-	} else if (fastcmp(word,"skincolor_redteam")) {
-		lua_pushinteger(L, skincolor_redteam);
-		return 1;
-	} else if (fastcmp(word,"skincolor_blueteam")) {
-		lua_pushinteger(L, skincolor_blueteam);
-		return 1;
-	} else if (fastcmp(word,"skincolor_redring")) {
-		lua_pushinteger(L, skincolor_redring);
-		return 1;
-	} else if (fastcmp(word,"skincolor_bluering")) {
-		lua_pushinteger(L, skincolor_bluering);
-		return 1;
-	// end CTF colors
-	// begin timers
-	} else if (fastcmp(word,"invulntics")) {
-		lua_pushinteger(L, invulntics);
-		return 1;
-	} else if (fastcmp(word,"sneakertics")) {
-		lua_pushinteger(L, sneakertics);
-		return 1;
-	} else if (fastcmp(word,"flashingtics")) {
-		lua_pushinteger(L, flashingtics);
-		return 1;
-	} else if (fastcmp(word,"tailsflytics")) {
-		lua_pushinteger(L, tailsflytics);
-		return 1;
-	} else if (fastcmp(word,"underwatertics")) {
-		lua_pushinteger(L, underwatertics);
-		return 1;
-	} else if (fastcmp(word,"spacetimetics")) {
-		lua_pushinteger(L, spacetimetics);
-		return 1;
-	} else if (fastcmp(word,"extralifetics")) {
-		lua_pushinteger(L, extralifetics);
-		return 1;
-	} else if (fastcmp(word,"nightslinktics")) {
-		lua_pushinteger(L, nightslinktics);
-		return 1;
-	} else if (fastcmp(word,"gameovertics")) {
-		lua_pushinteger(L, gameovertics);
-		return 1;
-	} else if (fastcmp(word,"ammoremovaltics")) {
-		lua_pushinteger(L, ammoremovaltics);
-		return 1;
-	// end timers
-	} else if (fastcmp(word,"gametype")) {
-		lua_pushinteger(L, gametype);
-		return 1;
-	} else if (fastcmp(word,"gametyperules")) {
-		lua_pushinteger(L, gametyperules);
-		return 1;
-	} else if (fastcmp(word,"leveltime")) {
-		lua_pushinteger(L, leveltime);
-		return 1;
-	} else if (fastcmp(word,"sstimer")) {
-		lua_pushinteger(L, sstimer);
-		return 1;
-	} else if (fastcmp(word,"curWeather")) {
-		lua_pushinteger(L, curWeather);
-		return 1;
-	} else if (fastcmp(word,"globalweather")) {
-		lua_pushinteger(L, globalweather);
-		return 1;
-	} else if (fastcmp(word,"levelskynum")) {
-		lua_pushinteger(L, levelskynum);
-		return 1;
-	} else if (fastcmp(word,"globallevelskynum")) {
-		lua_pushinteger(L, globallevelskynum);
-		return 1;
-	} else if (fastcmp(word,"mapmusname")) {
-		lua_pushstring(L, mapmusname);
-		return 1;
-	} else if (fastcmp(word,"mapmusflags")) {
-		lua_pushinteger(L, mapmusflags);
-		return 1;
-	} else if (fastcmp(word,"mapmusposition")) {
-		lua_pushinteger(L, mapmusposition);
-		return 1;
-	// local player variables, by popular request
-	} else if (fastcmp(word,"consoleplayer")) { // player controlling console (aka local player 1)
-		if (consoleplayer < 0 || !playeringame[consoleplayer])
-			return 0;
-		LUA_PushUserdata(L, &players[consoleplayer], META_PLAYER);
-		return 1;
-	} else if (fastcmp(word,"displayplayer")) { // player visible on screen (aka display player 1)
-		if (displayplayer < 0 || !playeringame[displayplayer])
-			return 0;
-		LUA_PushUserdata(L, &players[displayplayer], META_PLAYER);
-		return 1;
-	} else if (fastcmp(word,"secondarydisplayplayer")) { // local/display player 2, for splitscreen
-		if (!splitscreen || secondarydisplayplayer < 0 || !playeringame[secondarydisplayplayer])
-			return 0;
-		LUA_PushUserdata(L, &players[secondarydisplayplayer], META_PLAYER);
-		return 1;
-	// end local player variables
-	} else if (fastcmp(word,"server")) {
-		if ((!multiplayer || !netgame) && !playeringame[serverplayer])
-			return 0;
-		LUA_PushUserdata(L, &players[serverplayer], META_PLAYER);
-		return 1;
-	} else if (fastcmp(word,"emeralds")) {
-		lua_pushinteger(L, emeralds);
-		return 1;
-	} else if (fastcmp(word,"gravity")) {
-		lua_pushinteger(L, gravity);
-		return 1;
-	} else if (fastcmp(word,"VERSIONSTRING")) {
-		lua_pushstring(L, VERSIONSTRING);
-		return 1;
-	} else if (fastcmp(word, "token")) {
-		lua_pushinteger(L, token);
-		return 1;
-	}
-	return 0;
-}
-
-// See the above.
-int LUA_CheckGlobals(lua_State *L, const char *word)
-{
-	if (fastcmp(word, "redscore"))
-		redscore = (UINT32)luaL_checkinteger(L, 2);
-	else if (fastcmp(word, "bluescore"))
-		bluescore = (UINT32)luaL_checkinteger(L, 2);
-	else
-		return 0;
-
-	// Global variable set, so return and don't error.
-	return 1;
-}
-
 // This function decides which global variables you are allowed to set.
-static int setglobals(lua_State *L)
+static int noglobals(lua_State *L)
 {
 	const char *csname;
 	char *name;
@@ -330,9 +105,6 @@ static int setglobals(lua_State *L)
 		Z_Free(name);
 		return 0;
 	}
-
-	if (LUA_CheckGlobals(L, csname))
-		return 0;
 
 	Z_Free(name);
 	return luaL_error(L, "Implicit global " LUA_QS " prevented. Create a local variable instead.", csname);
@@ -372,7 +144,7 @@ static void LUA_ClearState(void)
 
 	// lock the global namespace
 	lua_getmetatable(L, LUA_GLOBALSINDEX);
-		lua_pushcfunction(L, setglobals);
+		lua_pushcfunction(L, noglobals);
 		lua_setfield(L, -2, "__newindex");
 		lua_newtable(L);
 		lua_setfield(L, -2, "__metatable");
@@ -441,9 +213,9 @@ void LUA_LoadLump(UINT16 wad, UINT16 lump)
 	else // If it's not a .lua file, copy the lump name in too.
 	{
 		lumpinfo_t *lump_p = &wadfiles[wad]->lumpinfo[lump];
-		len += 1 + strlen(lump_p->fullname); // length of file name, '|', and lump name
+		len += 1 + strlen(lump_p->name2); // length of file name, '|', and lump name
 		name = malloc(len+1);
-		sprintf(name, "%s|%s", wadfiles[wad]->filename, lump_p->fullname);
+		sprintf(name, "%s|%s", wadfiles[wad]->filename, lump_p->name2);
 		name[len] = '\0';
 	}
 
@@ -566,27 +338,6 @@ fixed_t LUA_EvalMath(const char *word)
 	// clean up and return.
 	lua_close(L);
 	return res;
-}
-
-/*
-LUA_PushUserdata but no userdata is created.
-You can't invalidate it therefore.
-*/
-
-void LUA_PushLightUserdata (lua_State *L, void *data, const char *meta)
-{
-	if (data)
-	{
-		lua_pushlightuserdata(L, data);
-		luaL_getmetatable(L, meta);
-		/*
-		The metatable is the last value on the stack, so this
-		applies it to the second value, which is the userdata.
-		*/
-		lua_setmetatable(L, -2);
-	}
-	else
-		lua_pushnil(L);
 }
 
 // Takes a pointer, any pointer, and a metatable name
@@ -730,13 +481,9 @@ void LUA_InvalidatePlayer(player_t *player)
 enum
 {
 	ARCH_NULL=0,
-	ARCH_TRUE,
-	ARCH_FALSE,
-	ARCH_INT8,
-	ARCH_INT16,
-	ARCH_INT32,
-	ARCH_SMALLSTRING,
-	ARCH_LARGESTRING,
+	ARCH_BOOLEAN,
+	ARCH_SIGNED,
+	ARCH_STRING,
 	ARCH_TABLE,
 
 	ARCH_MOBJINFO,
@@ -754,9 +501,10 @@ enum
 	ARCH_NODE,
 #endif
 	ARCH_FFLOOR,
+#ifdef ESLOPE
 	ARCH_SLOPE,
+#endif
 	ARCH_MAPHEADER,
-	ARCH_SKINCOLOR,
 
 	ARCH_TEND=0xFF,
 };
@@ -780,9 +528,10 @@ static const struct {
 	{META_NODE,     ARCH_NODE},
 #endif
 	{META_FFLOOR,	ARCH_FFLOOR},
+#ifdef ESLOPE
 	{META_SLOPE,    ARCH_SLOPE},
+#endif
 	{META_MAPHEADER,   ARCH_MAPHEADER},
-	{META_SKINCOLOR,   ARCH_SKINCOLOR},
 	{NULL,          ARCH_NULL}
 };
 
@@ -823,33 +572,22 @@ static UINT8 ArchiveValue(int TABLESINDEX, int myindex)
 		WRITEUINT8(save_p, ARCH_NULL);
 		return 2;
 	case LUA_TBOOLEAN:
-		WRITEUINT8(save_p, lua_toboolean(gL, myindex) ? ARCH_TRUE : ARCH_FALSE);
+		WRITEUINT8(save_p, ARCH_BOOLEAN);
+		WRITEUINT8(save_p, lua_toboolean(gL, myindex));
 		break;
 	case LUA_TNUMBER:
 	{
 		lua_Integer number = lua_tointeger(gL, myindex);
-		if (number >= INT8_MIN && number <= INT8_MAX)
-		{
-			WRITEUINT8(save_p, ARCH_INT8);
-			WRITESINT8(save_p, number);
-		}
-		else if (number >= INT16_MIN && number <= INT16_MAX)
-		{
-			WRITEUINT8(save_p, ARCH_INT16);
-			WRITEINT16(save_p, number);
-		}
-		else
-		{
-			WRITEUINT8(save_p, ARCH_INT32);
-			WRITEFIXED(save_p, number);
-		}
+        WRITEUINT8(save_p, ARCH_SIGNED);
+        WRITEFIXED(save_p, number);
 		break;
 	}
 	case LUA_TSTRING:
 	{
-		UINT32 len = (UINT32)lua_objlen(gL, myindex); // get length of string, including embedded zeros
+		UINT16 len = (UINT16)lua_objlen(gL, myindex); // get length of string, including embedded zeros
 		const char *s = lua_tostring(gL, myindex);
-		UINT32 i = 0;
+		UINT16 i = 0;
+		WRITEUINT8(save_p, ARCH_STRING);
 		// if you're wondering why we're writing a string to save_p this way,
 		// it turns out that Lua can have embedded zeros ('\0') in the strings,
 		// so we can't use WRITESTRING as that cuts off when it finds a '\0'.
@@ -857,16 +595,7 @@ static UINT8 ArchiveValue(int TABLESINDEX, int myindex)
 		// fixing the awful crashes previously encountered for reading strings longer than 1024
 		// (yes I know that's kind of a stupid thing to care about, but it'd be evil to trim or ignore them?)
 		// -- Monster Iestyn 05/08/18
-		if (len < 255)
-		{
-			WRITEUINT8(save_p, ARCH_SMALLSTRING);
-			WRITEUINT8(save_p, len); // save size of string
-		}
-		else
-		{
-			WRITEUINT8(save_p, ARCH_LARGESTRING);
-			WRITEUINT32(save_p, len); // save size of string
-		}
+		WRITEUINT16(save_p, len); // save size of string
 		while (i < len)
 			WRITECHAR(save_p, s[i++]); // write chars individually, including the embedded zeros
 		break;
@@ -1036,8 +765,16 @@ static UINT8 ArchiveValue(int TABLESINDEX, int myindex)
 			if (!rover)
 				WRITEUINT8(save_p, ARCH_NULL);
 			else {
-				UINT16 i = P_GetFFloorID(rover);
-				if (i == UINT16_MAX) // invalid ID
+				ffloor_t *r2;
+				UINT16 i = 0;
+				// search for id
+				for (r2 = rover->target->ffloors; r2; r2 = r2->next)
+				{
+					if (r2 == rover)
+						break;
+					i++;
+				}
+				if (!r2)
 					WRITEUINT8(save_p, ARCH_NULL);
 				else
 				{
@@ -1048,6 +785,7 @@ static UINT8 ArchiveValue(int TABLESINDEX, int myindex)
 			}
 			break;
 		}
+#ifdef ESLOPE
 		case ARCH_SLOPE:
 		{
 			pslope_t *slope = *((pslope_t **)lua_touserdata(gL, myindex));
@@ -1059,6 +797,7 @@ static UINT8 ArchiveValue(int TABLESINDEX, int myindex)
 			}
 			break;
 		}
+#endif
 		case ARCH_MAPHEADER:
 		{
 			mapheader_t *header = *((mapheader_t **)lua_touserdata(gL, myindex));
@@ -1068,14 +807,6 @@ static UINT8 ArchiveValue(int TABLESINDEX, int myindex)
 				WRITEUINT8(save_p, ARCH_MAPHEADER);
 				WRITEUINT16(save_p, header - *mapheaderinfo);
 			}
-			break;
-		}
-
-		case ARCH_SKINCOLOR:
-		{
-			skincolor_t *info = *((skincolor_t **)lua_touserdata(gL, myindex));
-			WRITEUINT8(save_p, ARCH_SKINCOLOR);
-			WRITEUINT16(save_p, info - skincolors);
 			break;
 		}
 		default:
@@ -1204,36 +935,21 @@ static UINT8 UnArchiveValue(int TABLESINDEX)
 	case ARCH_NULL:
 		lua_pushnil(gL);
 		break;
-	case ARCH_TRUE:
-		lua_pushboolean(gL, true);
+	case ARCH_BOOLEAN:
+		lua_pushboolean(gL, READUINT8(save_p));
 		break;
-	case ARCH_FALSE:
-		lua_pushboolean(gL, false);
-		break;
-	case ARCH_INT8:
-		lua_pushinteger(gL, READSINT8(save_p));
-		break;
-	case ARCH_INT16:
-		lua_pushinteger(gL, READINT16(save_p));
-		break;
-	case ARCH_INT32:
+	case ARCH_SIGNED:
 		lua_pushinteger(gL, READFIXED(save_p));
 		break;
-	case ARCH_SMALLSTRING:
-	case ARCH_LARGESTRING:
+	case ARCH_STRING:
 	{
-		UINT32 len;
+		UINT16 len = READUINT16(save_p); // length of string, including embedded zeros
 		char *value;
-		UINT32 i = 0;
-
+		UINT16 i = 0;
 		// See my comments in the ArchiveValue function;
 		// it's much the same for reading strings as writing them!
 		// (i.e. we can't use READSTRING either)
 		// -- Monster Iestyn 05/08/18
-		if (type == ARCH_SMALLSTRING)
-			len = READUINT8(save_p); // length of string, including embedded zeros
-		else
-			len = READUINT32(save_p); // length of string, including embedded zeros
 		value = malloc(len); // make temp buffer of size len
 		// now read the actual string
 		while (i < len)
@@ -1303,14 +1019,13 @@ static UINT8 UnArchiveValue(int TABLESINDEX)
 			LUA_PushUserdata(gL, rover, META_FFLOOR);
 		break;
 	}
+#ifdef ESLOPE
 	case ARCH_SLOPE:
 		LUA_PushUserdata(gL, P_SlopeById(READUINT16(save_p)), META_SLOPE);
 		break;
+#endif
 	case ARCH_MAPHEADER:
 		LUA_PushUserdata(gL, mapheaderinfo[READUINT16(save_p)], META_MAPHEADER);
-		break;
-	case ARCH_SKINCOLOR:
-		LUA_PushUserdata(gL, &skincolors[READUINT16(save_p)], META_SKINCOLOR);
 		break;
 	case ARCH_TEND:
 		return 1;
@@ -1477,3 +1192,5 @@ int Lua_optoption(lua_State *L, int narg,
 			return i;
 	return -1;
 }
+
+#endif // HAVE_BLUA

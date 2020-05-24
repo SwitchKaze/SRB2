@@ -56,7 +56,6 @@ static consvar_t cv_stretch = {"stretch", "On", CV_SAVE|CV_NOSHOWHELP, CV_OnOff,
 static consvar_t cv_ontop = {"ontop", "Never", 0, CV_NeverOnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 
 boolean highcolor;
-int vid_opengl_state = 0;
 
 static BOOL bDIBMode; // means we are using DIB instead of DirectDraw surfaces
 static LPBITMAPINFO bmiMain = NULL;
@@ -240,7 +239,10 @@ void I_StartupGraphics(void)
 	if (!dedicated) graphics_started = true;
 }
 
-void VID_StartupOpenGL(void){}
+void I_StartupHardwareGraphics(void)
+{
+	// oh yeah woo yeah oh yeah woo yeah oh yeah woo yeah oh yeah woo yeah oh yeah woo yeah oh yeah woo yeah oh yeah woo y
+}
 
 // ------------------
 // I_ShutdownGraphics
@@ -949,10 +951,9 @@ INT32 VID_SetMode(INT32 modenum)
 	return 1;
 }
 
-void VID_CheckRenderer(void) {}
-void VID_CheckGLLoaded(rendermode_t oldrender)
+void VID_CheckRenderer(void)
 {
-	(void)oldrender;
+	// ..............
 }
 
 // ========================================================================

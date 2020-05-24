@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2020 by Sonic Team Junior.
+// Copyright (C) 1999-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -279,7 +279,9 @@ typedef struct mobj_s
 
 	// More drawing info: to determine current sprite.
 	angle_t angle;  // orientation
+#ifdef ROTSPRITE
 	angle_t rollangle;
+#endif
 	spritenum_t sprite; // used to find patch_t and flip value
 	UINT32 frame; // frame number, plus bits see p_pspr.h
 	UINT8 sprite2; // player sprites
@@ -312,7 +314,7 @@ typedef struct mobj_s
 	void *skin; // overrides 'sprite' when non-NULL (for player bodies to 'remember' the skin)
 	// Player and mobj sprites in multiplayer modes are modified
 	//  using an internal color lookup table for re-indexing.
-	UINT16 color; // This replaces MF_TRANSLATION. Use 0 for default (no translation).
+	UINT8 color; // This replaces MF_TRANSLATION. Use 0 for default (no translation).
 
 	// Interaction info, by BLOCKMAP.
 	// Links in blocks (if needed).
@@ -370,10 +372,11 @@ typedef struct mobj_s
 	INT32 cusval;
 	INT32 cvmem;
 
+#ifdef ESLOPE
 	struct pslope_s *standingslope; // The slope that the object is standing on (shouldn't need synced in savegames, right?)
+#endif
 
 	boolean colorized; // Whether the mobj uses the rainbow colormap
-	fixed_t shadowscale; // If this object casts a shadow, and the size relative to radius
 
 	// WARNING: New fields must be added separately to savegame and Lua.
 } mobj_t;
@@ -399,7 +402,9 @@ typedef struct precipmobj_s
 
 	// More drawing info: to determine current sprite.
 	angle_t angle;  // orientation
+#ifdef ROTSPRITE
 	angle_t rollangle;
+#endif
 	spritenum_t sprite; // used to find patch_t and flip value
 	UINT32 frame; // frame number, plus bits see p_pspr.h
 	UINT8 sprite2; // player sprites
@@ -451,13 +456,8 @@ void P_MovePlayerToSpawn(INT32 playernum, mapthing_t *mthing);
 void P_MovePlayerToStarpost(INT32 playernum);
 void P_AfterPlayerSpawn(INT32 playernum);
 
-fixed_t P_GetMobjSpawnHeight(const mobjtype_t mobjtype, const fixed_t x, const fixed_t y, const fixed_t offset, const boolean flip);
-fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y);
-
-mobj_t *P_SpawnMapThing(mapthing_t *mthing);
-void P_SpawnHoop(mapthing_t *mthing);
-void P_SetBonusTime(mobj_t *mobj);
-void P_SpawnItemPattern(mapthing_t *mthing, boolean bonustime);
+void P_SpawnMapThing(mapthing_t *mthing);
+void P_SpawnHoopsAndRings(mapthing_t *mthing, boolean bonustime);
 void P_SpawnHoopOfSomething(fixed_t x, fixed_t y, fixed_t z, fixed_t radius, INT32 number, mobjtype_t type, angle_t rotangle);
 void P_SpawnPrecipitation(void);
 void P_SpawnParaloop(fixed_t x, fixed_t y, fixed_t z, fixed_t radius, INT32 number, mobjtype_t type, statenum_t nstate, angle_t rotangle, boolean spawncenter);
