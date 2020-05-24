@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2020 by Sonic Team Junior.
+// Copyright (C) 1999-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -66,7 +66,9 @@ typedef enum
 	THINK_POLYOBJ,
 	THINK_MAIN,
 	THINK_MOBJ,
+#ifdef ESLOPE
 	THINK_DYNSLOPE,
+#endif
 	THINK_PRECIP,
 	NUM_THINKERLISTS
 } thinklistnum_t; /**< Thinker lists. */
@@ -118,10 +120,6 @@ extern consvar_t cv_cam_speed, cv_cam_rotate, cv_cam_rotspeed, cv_cam_turnmultip
 extern consvar_t cv_cam2_dist, cv_cam2_still, cv_cam2_height;
 extern consvar_t cv_cam2_speed, cv_cam2_rotate, cv_cam2_rotspeed, cv_cam2_turnmultiplier, cv_cam2_orbit, cv_cam2_adjust;
 
-extern consvar_t cv_cam_savedist[2][2], cv_cam_saveheight[2][2];
-void CV_UpdateCamDist(void);
-void CV_UpdateCam2Dist(void);
-
 extern fixed_t t_cam_dist, t_cam_height, t_cam_rotate;
 extern fixed_t t_cam2_dist, t_cam2_height, t_cam2_rotate;
 
@@ -157,7 +155,6 @@ void P_GivePlayerLives(player_t *player, INT32 numlives);
 void P_GiveCoopLives(player_t *player, INT32 numlives, boolean sound);
 UINT8 P_GetNextEmerald(void);
 void P_GiveEmerald(boolean spawnObj);
-void P_GiveFinishFlags(player_t *player);
 #if 0
 void P_ResetScore(player_t *player);
 #else
@@ -184,14 +181,16 @@ fixed_t P_ReturnThrustX(mobj_t *mo, angle_t angle, fixed_t move);
 fixed_t P_ReturnThrustY(mobj_t *mo, angle_t angle, fixed_t move);
 void P_InstaThrustEvenIn2D(mobj_t *mo, angle_t angle, fixed_t move);
 
-mobj_t *P_LookForFocusTarget(player_t *player, mobj_t *exclude, SINT8 direction, UINT8 lockonflags);
-
 mobj_t *P_LookForEnemies(player_t *player, boolean nonenemies, boolean bullet);
 void P_NukeEnemies(mobj_t *inflictor, mobj_t *source, fixed_t radius);
 boolean P_HomingAttack(mobj_t *source, mobj_t *enemy); /// \todo doesn't belong in p_user
 boolean P_SuperReady(player_t *player);
 void P_DoJump(player_t *player, boolean soundandstate);
-#define P_AnalogMove(player) (P_ControlStyle(player) == CS_LMAOGALOG)
+#if 0
+boolean P_AnalogMove(player_t *player);
+#else
+#define P_AnalogMove(player) (player->pflags & PF_ANALOGMODE)
+#endif
 boolean P_TransferToNextMare(player_t *player);
 UINT8 P_FindLowestMare(void);
 void P_FindEmerald(void);
@@ -248,7 +247,7 @@ extern jingle_t jingleinfo[NUMJINGLES];
 #define JINGLEPOSTFADE 1000
 
 void P_PlayJingle(player_t *player, jingletype_t jingletype);
-boolean P_EvaluateMusicStatus(UINT16 status, const char *musname);
+boolean P_EvaluateMusicStatus(UINT16 status);
 void P_PlayJingleMusic(player_t *player, const char *musname, UINT16 musflags, boolean looping, UINT16 status);
 
 //
@@ -381,7 +380,9 @@ extern mobj_t *tmfloorthing, *tmhitthing, *tmthing;
 extern camera_t *mapcampointer;
 extern fixed_t tmx;
 extern fixed_t tmy;
+#ifdef ESLOPE
 extern pslope_t *tmfloorslope, *tmceilingslope;
+#endif
 
 /* cphipps 2004/08/30 */
 extern void P_MapStart(void);
@@ -483,7 +484,6 @@ void P_PlayerWeaponPanelOrAmmoBurst(player_t *player);
 void P_PlayerEmeraldBurst(player_t *player, boolean toss);
 
 void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck);
-void P_TouchStarPost(mobj_t *starpost, player_t *player, boolean snaptopost);
 void P_PlayerFlagBurst(player_t *player, boolean toss);
 void P_CheckTimeLimit(void);
 void P_CheckPointLimit(void);

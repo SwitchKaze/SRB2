@@ -19,9 +19,9 @@ boolean allow_fullscreen = false;
 consvar_t cv_vidwait = {"vid_wait", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 
 void I_StartupGraphics(void){}
-void I_ShutdownGraphics(void){}
+void I_StartupHardwareGraphics(void){}
 
-void VID_StartupOpenGL(void){}
+void I_ShutdownGraphics(void){}
 
 void I_SetPalette(RGBA_t *palette)
 {
@@ -52,8 +52,10 @@ INT32 VID_SetMode(INT32 modenum)
   return 0;
 }
 
-void VID_CheckRenderer(void) {}
-void VID_CheckGLLoaded(rendermode_t oldrender) {}
+void VID_CheckRenderer(void)
+{
+	// ..............
+}
 
 const char *VID_GetModeName(INT32 modenum)
 {

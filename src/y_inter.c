@@ -1,6 +1,6 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
-// Copyright (C) 2004-2020 by Sonic Team Junior.
+// Copyright (C) 2004-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -19,7 +19,7 @@
 #include "i_video.h"
 #include "p_tick.h"
 #include "r_defs.h"
-#include "r_skins.h"
+#include "r_things.h"
 #include "s_sound.h"
 #include "st_stuff.h"
 #include "v_video.h"
@@ -36,8 +36,6 @@
 
 #include "m_cond.h" // condition sets
 #include "lua_hook.h" // IntermissionThinker hook
-
-#include "lua_hud.h"
 
 #ifdef HWRENDER
 #include "hardware/hw_main.h"
@@ -73,7 +71,7 @@ typedef union
 		UINT32 score, total; // fake score, total
 		UINT32 tics; // time
 
-		UINT8 actnum; // act number being displayed
+		INT32 actnum; // act number being displayed
 		patch_t *ptotal; // TOTAL
 		UINT8 gotlife; // Number of extra lives obtained
 	} coop;
@@ -99,7 +97,7 @@ typedef union
 		UINT8 continues;
 		patch_t *pcontinues;
 		INT32 *playerchar; // Continue HUD
-		UINT16 *playercolor;
+		UINT8 *playercolor;
 
 		UINT8 gotlife; // Number of extra lives obtained
 	} spec;
@@ -107,7 +105,7 @@ typedef union
 	struct
 	{
 		UINT32 scores[MAXPLAYERS]; // Winner's score
-		UINT16 *color[MAXPLAYERS]; // Winner's color #
+		UINT8 *color[MAXPLAYERS]; // Winner's color #
 		boolean spectator[MAXPLAYERS]; // Spectator list
 		INT32 *character[MAXPLAYERS]; // Winner's character #
 		INT32 num[MAXPLAYERS]; // Winner's player #
@@ -121,7 +119,7 @@ typedef union
 
 	struct
 	{
-		UINT16 *color[MAXPLAYERS]; // Winner's color #
+		UINT8 *color[MAXPLAYERS]; // Winner's color #
 		INT32 *character[MAXPLAYERS]; // Winner's character #
 		INT32 num[MAXPLAYERS]; // Winner's player #
 		char name[MAXPLAYERS][9]; // Winner's name
@@ -167,7 +165,6 @@ static INT32 tallydonetic = -1;
 static INT32 endtic = -1;
 
 intertype_t intertype = int_none;
-intertype_t intermissiontypes[NUMGAMETYPES];
 
 static void Y_RescaleScreenBuffer(void);
 static void Y_AwardCoopBonuses(void);
@@ -323,16 +320,9 @@ void Y_IntermissionDrawer(void)
 	// Bonus loops
 	INT32 i;
 
-	if (rendermode == render_none)
+	if (intertype == int_none || rendermode == render_none)
 		return;
 
-	if (intertype == int_none)
-	{
-		LUAh_IntermissionHUD();
-		return;
-	}
-
-	if (!usebuffer)
 	// Lactozilla: Renderer switching
 	if (needpatchrecache)
 	{
@@ -379,10 +369,6 @@ void Y_IntermissionDrawer(void)
 	}
 	else
 		V_DrawPatchFill(bgtile);
-
-	LUAh_IntermissionHUD();
-	if (!LUA_HudEnabled(hud_intermissiontally))
-		goto skiptallydrawer;
 
 dontdrawbg:
 	if (intertype == int_coop)
@@ -564,7 +550,7 @@ dontdrawbg:
 			V_DrawTallNum(BASEVIDWIDTH + xoffset4 - 68, 125+yoffset, 0, data.spec.score);
 
 			// Draw continues!
-			if (continuesInSession /* && (data.spec.continues & 0x80) */) // Always draw when continues are a thing
+			if (!multiplayer /* && (data.spec.continues & 0x80) */) // Always draw outside of netplay
 			{
 				UINT8 continues = data.spec.continues & 0x7F;
 
@@ -938,10 +924,6 @@ dontdrawbg:
 		}
 	}
 
-skiptallydrawer:
-	if (!LUA_HudEnabled(hud_intermissionmessages))
-		return;
-
 	if (timer)
 		V_DrawCenteredString(BASEVIDWIDTH/2, 188, V_YELLOWMAP,
 			va("start in %d seconds", timer/TICRATE));
@@ -965,7 +947,9 @@ void Y_Ticker(void)
 	if (paused || P_AutoPause())
 		return;
 
+#ifdef HAVE_BLUA
 	LUAh_IntermissionThinker();
+#endif
 
 	intertic++;
 
@@ -1222,9 +1206,7 @@ void Y_StartIntermission(void)
 				timer = 1;
 		}
 
-		if (intermissiontypes[gametype] != int_none)
-			intertype = intermissiontypes[gametype];
-		else if (gametype == GT_COOP)
+		if (gametype == GT_COOP)
 			intertype = (G_IsSpecialStage(gamemap)) ? int_spec : int_coop;
 		else if (gametype == GT_TEAMMATCH)
 			intertype = int_teammatch;
@@ -1987,7 +1969,7 @@ static void Y_AwardCoopBonuses(void)
 
 		if (i == consoleplayer)
 		{
-			data.coop.gotlife = (((netgame || multiplayer) && G_GametypeUsesCoopLives() && cv_cooplives.value == 0) ? 0 : ptlives);
+			data.coop.gotlife = (((netgame || multiplayer) && gametype == GT_COOP && cv_cooplives.value == 0) ? 0 : ptlives);
 			M_Memcpy(&data.coop.bonuses, &localbonuses, sizeof(data.coop.bonuses));
 		}
 	}
@@ -2042,7 +2024,7 @@ static void Y_AwardSpecialStageBonus(void)
 
 		if (i == consoleplayer)
 		{
-			data.spec.gotlife = (((netgame || multiplayer) && G_GametypeUsesCoopLives() && cv_cooplives.value == 0) ? 0 : ptlives);
+			data.spec.gotlife = (((netgame || multiplayer) && gametype == GT_COOP && cv_cooplives.value == 0) ? 0 : ptlives);
 			M_Memcpy(&data.spec.bonuses, &localbonuses, sizeof(data.spec.bonuses));
 
 			// Continues related

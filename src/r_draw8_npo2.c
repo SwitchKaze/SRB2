@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2020 by Sonic Team Junior.
+// Copyright (C) 1999-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -61,8 +61,7 @@ void R_DrawSpan_NPO2_8 (void)
 	}
 }
 
-#define PLANELIGHTFLOAT (BASEVIDWIDTH * BASEVIDWIDTH / vid.width / (zeroheight - FIXED_TO_FLOAT(viewz)) / 21.0f * FIXED_TO_FLOAT(fovtan))
-
+#ifdef ESLOPE
 /**	\brief The R_DrawTiltedSpan_NPO2_8 function
 	Draw slopes! Holy sheit!
 */
@@ -87,7 +86,7 @@ void R_DrawTiltedSpan_NPO2_8(void)
 
 	// Lighting is simple. It's just linear interpolation from start to end
 	{
-		float planelightfloat = PLANELIGHTFLOAT;
+		float planelightfloat = BASEVIDWIDTH*BASEVIDWIDTH/vid.width / (zeroheight - FIXED_TO_FLOAT(viewz)) / 21.0f;
 		float lightstart, lightend;
 
 		lightend = (iz + ds_szp->x*width) * planelightfloat;
@@ -283,7 +282,7 @@ void R_DrawTiltedTranslucentSpan_NPO2_8(void)
 
 	// Lighting is simple. It's just linear interpolation from start to end
 	{
-		float planelightfloat = PLANELIGHTFLOAT;
+		float planelightfloat = BASEVIDWIDTH*BASEVIDWIDTH/vid.width / (zeroheight - FIXED_TO_FLOAT(viewz)) / 21.0f;
 		float lightstart, lightend;
 
 		lightend = (iz + ds_szp->x*width) * planelightfloat;
@@ -477,7 +476,7 @@ void R_DrawTiltedSplat_NPO2_8(void)
 
 	// Lighting is simple. It's just linear interpolation from start to end
 	{
-		float planelightfloat = PLANELIGHTFLOAT;
+		float planelightfloat = BASEVIDWIDTH*BASEVIDWIDTH/vid.width / (zeroheight - FIXED_TO_FLOAT(viewz)) / 21.0f;
 		float lightstart, lightend;
 
 		lightend = (iz + ds_szp->x*width) * planelightfloat;
@@ -659,6 +658,7 @@ void R_DrawTiltedSplat_NPO2_8(void)
 	}
 #endif
 }
+#endif // ESLOPE
 
 /**	\brief The R_DrawSplat_NPO2_8 function
 	Just like R_DrawSpan_NPO2_8, but skips transparent pixels.
@@ -843,6 +843,7 @@ void R_DrawTranslucentWaterSpan_NPO2_8(void)
 	}
 }
 
+#ifdef ESLOPE
 /**	\brief The R_DrawTiltedTranslucentWaterSpan_NPO2_8 function
 	Like DrawTiltedTranslucentSpan_NPO2, but for water
 */
@@ -868,7 +869,7 @@ void R_DrawTiltedTranslucentWaterSpan_NPO2_8(void)
 
 	// Lighting is simple. It's just linear interpolation from start to end
 	{
-		float planelightfloat = PLANELIGHTFLOAT;
+		float planelightfloat = BASEVIDWIDTH*BASEVIDWIDTH/vid.width / (zeroheight - FIXED_TO_FLOAT(viewz)) / 21.0f;
 		float lightstart, lightend;
 
 		lightend = (iz + ds_szp->x*width) * planelightfloat;
@@ -1039,4 +1040,5 @@ void R_DrawTiltedTranslucentWaterSpan_NPO2_8(void)
 	}
 #endif
 }
+#endif // ESLOPE
 #endif // NOWATER

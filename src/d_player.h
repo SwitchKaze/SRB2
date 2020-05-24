@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2020 by Sonic Team Junior.
+// Copyright (C) 1999-2019 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -48,7 +48,6 @@ typedef enum
 	SF_FASTEDGE         = 1<<12, // Faster edge teeter?
 	SF_MULTIABILITY     = 1<<13, // Revenge of Final Demo.
 	SF_NONIGHTSROTATION = 1<<14, // Disable sprite rotation for NiGHTS
-	SF_NONIGHTSSUPER    = 1<<15, // Disable super colors for NiGHTS (if you have SF_SUPER)
 	// free up to and including 1<<31
 } skinflags_t;
 
@@ -239,8 +238,7 @@ typedef enum
 	CR_MACESPIN,
 	CR_MINECART,
 	CR_ROLLOUT,
-	CR_PTERABYTE,
-	CR_DUSTDEVIL
+	CR_PTERABYTE
 } carrytype_t; // pw_carry
 
 // Player powers. (don't edit this comment)
@@ -280,10 +278,6 @@ typedef enum
 	pw_nights_linkfreeze,
 
 	pw_nocontrol, //for linedef exec 427
-
-	pw_dye, // for dyes
-
-	pw_justlaunched, // Launched off a slope this tic (0=none, 1=standard launch, 2=half-pipe launch)
 
 	NUMPOWERS
 } powertype_t;
@@ -330,8 +324,6 @@ typedef struct player_s
 	// bounded/scaled total momentum.
 	fixed_t bob;
 
-	angle_t viewrollangle;
-
 	// Mouse aiming, where the guy is looking at!
 	// It is updated with cmd->aiming.
 	angle_t aiming;
@@ -366,7 +358,7 @@ typedef struct player_s
 	UINT16 flashpal;
 
 	// Player skin colorshift, 0-15 for which color to draw player.
-	UINT16 skincolor;
+	UINT8 skincolor;
 
 	INT32 skin;
 	UINT32 availabilities;
@@ -518,7 +510,6 @@ typedef struct player_s
 	UINT8 bot;
 
 	tic_t jointime; // Timer when player joins game to change skin/color
-	tic_t quittime; // Time elapsed since user disconnected, zero if connected
 #ifdef HWRENDER
 	fixed_t fovadd; // adjust FOV for hw rendering
 #endif
