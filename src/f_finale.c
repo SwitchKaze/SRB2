@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2019 by Sonic Team Junior.
+// Copyright (C) 1999-2020 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -39,9 +39,7 @@
 #include "fastcmp.h"
 #include "console.h"
 
-#ifdef HAVE_BLUA
 #include "lua_hud.h"
-#endif
 
 // Stage of animation:
 // 0 = text, 1 = art screen
@@ -1120,6 +1118,9 @@ static const char *credits[] = {
 	"\1Sonic Robo Blast II",
 	"\1Credits",
 	"",
+	"\1Producer",
+	"Rob Tisdell",
+	"",
 	"\1Game Design",
 	"Ben \"Mystic\" Geyer",
 	"\"SSNTails\"",
@@ -1165,6 +1166,7 @@ static const char *credits[] = {
 	"Tasos \"tatokis\" Sahanidis", // Corrected C FixedMul, making 64-bit builds netplay compatible
 	"Wessel \"sphere\" Smit",
 	"Ben \"Cue\" Woodford",
+	"Ikaro \"Tatsuru\" Vinhas",
 	// Git contributors with 5+ approved merges of substantive quality,
 	// or contributors with at least one groundbreaking merge, may be named.
 	// Everyone else is acknowledged under "Special Thanks > SRB2 Community Contributors".
@@ -1233,6 +1235,7 @@ static const char *credits[] = {
 	"Thomas \"Shadow Hog\" Igoe",
 	"Alexander \"DrTapeworm\" Moench-Ford",
 	"\"Kaito Sinclaire\"",
+	"Anna \"QueenDelta\" Sandlin",
 	"Wessel \"sphere\" Smit",
 	"\"Spazzo\"",
 	"\"SSNTails\"",
@@ -1256,7 +1259,7 @@ static const char *credits[] = {
 	"Cody \"SRB2 Playah\" Koester",
 	"Skye \"OmegaVelocity\" Meredith",
 	"Stephen \"HEDGESMFG\" Moellering",
-	"Nick \"ST218\" Molina",
+	"Rosalie \"ST218\" Molina",
 	"Samuel \"Prime 2.0\" Peters",
 	"Colin \"Sonict\" Pfaff",
 	"Bill \"Tets\" Reed",
@@ -2182,7 +2185,7 @@ void F_EndingDrawer(void)
 			for (i = 0; i < 7; ++i)
 			{
 				UINT8* colormap;
-				skincolors_t col = SKINCOLOR_GREEN;
+				skincolornum_t col = SKINCOLOR_GREEN;
 				switch (i)
 				{
 					case 1:
@@ -2547,7 +2550,7 @@ void F_StartTitleScreen(void)
 			camera.x = startpos->x << FRACBITS;
 			camera.y = startpos->y << FRACBITS;
 			camera.subsector = R_PointInSubsector(camera.x, camera.y);
-			camera.z = camera.subsector->sector->floorheight + ((startpos->options >> ZSHIFT) << FRACBITS);
+			camera.z = camera.subsector->sector->floorheight + (startpos->z << FRACBITS);
 			camera.angle = (startpos->angle % 360)*ANG1;
 			camera.aiming = 0;
 		}
@@ -2757,11 +2760,7 @@ void F_TitleScreenDrawer(void)
 	// rei|miru: use title pics?
 	hidepics = curhidepics;
 	if (hidepics)
-#ifdef HAVE_BLUA
 		goto luahook;
-#else
-		return;
-#endif
 
 	switch(curttmode)
 	{
@@ -3483,10 +3482,8 @@ void F_TitleScreenDrawer(void)
 			break;
 	}
 
-#ifdef HAVE_BLUA
 luahook:
 	LUAh_TitleHUD();
-#endif
 }
 
 // separate animation timer for backgrounds, since we also count
@@ -3621,7 +3618,7 @@ void F_StartContinue(void)
 {
 	I_Assert(!netgame && !multiplayer);
 
-	if (players[consoleplayer].continues <= 0)
+	if (continuesInSession && players[consoleplayer].continues <= 0)
 	{
 		Command_ExitGame_f();
 		return;
@@ -3728,7 +3725,9 @@ void F_ContinueDrawer(void)
 	}
 
 	// Draw the continue markers! Show continues.
-	if (ncontinues > 10)
+	if (!continuesInSession)
+		;
+	else if (ncontinues > 10)
 	{
 		if (!(continuetime & 1) || continuetime > 17)
 			V_DrawContinueIcon(x, 68, 0, players[consoleplayer].skin, players[consoleplayer].skincolor);

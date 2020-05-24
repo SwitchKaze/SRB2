@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 2012-2016 by John "JTE" Muniz.
-// Copyright (C) 2012-2019 by Sonic Team Junior.
+// Copyright (C) 2012-2020 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -11,7 +11,6 @@
 /// \brief basic math library for Lua scripting
 
 #include "doomdef.h"
-#ifdef HAVE_BLUA
 //#include "fastcmp.h"
 #include "tables.h"
 #include "p_local.h"
@@ -173,15 +172,14 @@ static int lib_all7emeralds(lua_State *L)
 	return 1;
 }
 
-// Whee, special Lua-exclusive function for making use of Color_Opposite[]
 // Returns both color and signpost shade numbers!
 static int lib_coloropposite(lua_State *L)
 {
-	UINT8 colornum = (UINT8)luaL_checkinteger(L, 1);
-	if (!colornum || colornum >= MAXSKINCOLORS)
-		return luaL_error(L, "skincolor %d out of range (1 - %d).", colornum, MAXSKINCOLORS-1);
-	lua_pushinteger(L, Color_Opposite[colornum-1][0]); // push color
-	lua_pushinteger(L, Color_Opposite[colornum-1][1]); // push sign shade index, 0-15
+	UINT16 colornum = (UINT16)luaL_checkinteger(L, 1);
+	if (!colornum || colornum >= numskincolors)
+		return luaL_error(L, "skincolor %d out of range (1 - %d).", colornum, numskincolors-1);
+	lua_pushinteger(L, skincolors[colornum].invcolor); // push color
+	lua_pushinteger(L, skincolors[colornum].invshade); // push sign shade index, 0-15
 	return 2;
 }
 
@@ -217,5 +215,3 @@ int LUA_MathLib(lua_State *L)
 	luaL_register(L, NULL, lib);
 	return 0;
 }
-
-#endif
